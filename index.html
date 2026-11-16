@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medemer Philosophy Quiz - 130 MCQs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Ethiopic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans Ethiopic', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .option-btn {
+            transition: all 0.2s ease;
+        }
+        .option-btn:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .correct-answer {
+            background-color: #d1fae5 !important;
+            border-color: #10b981 !important;
+            color: #065f46 !important;
+        }
+        .wrong-answer {
+            background-color: #fee2e2 !important;
+            border-color: #ef4444 !important;
+            color: #b91c1c !important;
+        }
+        .disabled-option {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 text-gray-800">
+
+    <!-- Main Container -->
+    <div id="app-container" class="bg-white rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden min-h-[500px] flex flex-col relative">
+        
+        <!-- Header -->
+        <header class="bg-indigo-600 text-white p-6 text-center">
+            <h1 class="text-2xl font-bold tracking-tight">የመደመር ፍልስፍና ጥያቄዎች</h1>
+            <p class="text-indigo-100 mt-1 text-sm">Medemer Philosophy Comprehensive Quiz</p>
+        </header>
+
+        <!-- Error Toast (Replaces alert) -->
+        <div id="toast" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded shadow-lg hidden z-50 transition-opacity">
+            <span id="toast-message"></span>
+        </div>
+
+        <!-- 1. Authentication / Welcome Screen -->
+        <div id="welcome-screen" class="p-8 flex-grow flex flex-col justify-center fade-in">
+            <div class="max-w-md mx-auto w-full">
+                <h2 class="text-xl font-semibold mb-6 text-gray-700 text-center">Student Identification</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Full Name / ሙሉ ስም</label>
+                        <input type="text" id="student-name" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow" placeholder="Abebe Kebede">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ID Number / መለያ ቁጥር</label>
+                        <input type="text" id="student-id" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow" placeholder="UGR/1234/15">
+                    </div>
+                    <button onclick="startQuiz()" class="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                        Start Quiz / ፈተናውን ጀምር
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Quiz Screen -->
+        <div id="quiz-screen" class="p-6 md:p-8 flex-grow flex flex-col hidden fade-in">
+            <!-- Progress and Status -->
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+                <div class="text-sm font-medium text-gray-500">
+                    Question <span id="current-q-num" class="text-indigo-600 font-bold text-lg">1</span> of <span id="total-q-num">130</span>
+                </div>
+                <div class="text-sm font-medium text-gray-500">
+                    Score: <span id="current-score" class="text-green-600 font-bold text-lg">0</span>
+                </div>
+            </div>
+
+            <!-- Question Area -->
+            <div class="flex-grow">
+                <h2 id="question-text" class="text-lg md:text-xl font-semibold text-gray-800 mb-6 leading-relaxed">
+                    <!-- Question will be injected here -->
+                </h2>
+
+                <!-- Options -->
+                <div id="options-container" class="space-y-3">
+                    <!-- Options will be injected here -->
+                </div>
+
+                <!-- Instant Feedback & Explanation -->
+                <div id="feedback-container" class="mt-6 p-4 rounded-lg hidden fade-in">
+                    <h3 id="feedback-title" class="font-bold text-lg mb-2"></h3>
+                    <div class="text-sm space-y-2">
+                        <p id="feedback-amharic" class="text-gray-700 leading-relaxed font-medium"></p>
+                        <p id="feedback-english" class="text-gray-600 leading-relaxed italic"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Controls -->
+            <div class="mt-8 pt-4 border-t border-gray-200 flex justify-between items-center">
+                <button onclick="prevQuestion()" id="btn-prev" class="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    &larr; Back
+                </button>
+                
+                <button onclick="nextQuestion()" id="btn-next" class="px-5 py-2.5 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors">
+                    Skip / Next &rarr;
+                </button>
+
+                <button onclick="submitQuiz()" id="btn-submit" class="px-5 py-2.5 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-colors hidden">
+                    Submit Quiz
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. Results Dashboard Screen -->
+        <div id="result-screen" class="p-8 flex-grow flex flex-col items-center justify-center hidden fade-in text-center">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Quiz Completed!</h2>
+            <p class="text-gray-500 mb-8">Here is your summary, <span id="summary-name" class="font-semibold text-gray-800"></span> (<span id="summary-id"></span>).</p>
+            
+            <div class="bg-gray-50 rounded-xl p-6 w-full max-w-sm mb-8 border border-gray-200">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-gray-600 font-medium">Final Score:</span>
+                    <span id="final-score-val" class="text-2xl font-bold text-indigo-600">0/130</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="score-bar" class="bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+                <div class="mt-4 text-right">
+                    <span id="final-percentage" class="text-sm font-semibold text-gray-600">0%</span>
+                </div>
+            </div>
+
+            <div class="space-y-4 w-full max-w-sm">
+                <button onclick="sendScoresToTeacher()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    Send Score to Teacher
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 130 Question Bank (Parsed from the Medemer Document requirements)
+        // Format: [Question, OptionA, OptionB, OptionC, OptionD, CorrectIndex (0-3)]
+        const rawData = [
+            ["የሰው ልጅን ፍላጎት ሁሉ የሚመራው መሠረታዊ ፍላጎት ምንድነው?", "ሀብት የማከማቸት ፍላጎት", "ዝናን የማትረፍ ፍላጎት", "ህልውናን የማረጋገጥ ፍላጎት", "ስልጣን የመያዝ ፍላጎት", 2],
+            ["ቀጥተኛ የህልውና ፍላጎት የሚባለው የትኛው ነው?", "የመብላትና የመጠጣት ፍላጎት", "ከግልጽና ቅርብ አደጋ ራስን ማዳን", "የመማር ፍላጎት", "የክብርና የስም ፍላጎት", 1],
+            ["ከሚከተሉት ውስጥ ተዘዋዋሪ የህልውና ፍላጎት ያልሆነው የቱ ነው?", "የስም ፍላጎት", "የነጻነት ፍላጎት", "ሥጋዊ ፍላጎት", "ከጦርነት ራስን መከላከል", 3],
+            ["ሥጋዊ ፍላጎት በዋናነት ምንን ያካትታል?", "የእኩልነት ጥያቄ", "የመብላት፣ የመጠጣትና የመጠለል ፍላጎት", "ከእስር የመላቀቅ ፍላጎት", "የመከበር ፍላጎት", 1],
+            ["የማንነት ጥያቄዎች ከየትኛው ፍላጎት ጋር ይያያዛሉ?", "ከቀጥተኛ ህልውና ፍላጎት", "ከኢኮኖሚያዊ ፍላጎት", "ከስም (ክብር) ፍላጎት", "ከሥጋዊ ፍላጎት", 2],
+            ["ነጻነት ማለት በመሠረቱ ምንድነው?", "ሀብት ማካበት", "ከሌሎች በላይ ሆኖ መታየት", "በሕይወት አማራጮች ራስን መወሰን", "ሁሉንም ሰው እኩል ማድረግ", 2],
+            ["በመደመር ፍልስፍና የሰው ልጅ ፍላጎቶች ምን ዓይነት ባሕርይ አላቸው?", "ተደማሪና እርስ በርስ የተሳሰረ", "የተነጣጠለ", "ቅደም ተከተል ያለው", "አንዱ ሲሟላ ሌላው የሚጠፋ", 0],
+            ["ዜጎችን ከጥቃት ለመከላከል የሚደረግ ቁጥጥር የትኛውን ፍላጎት ሊያጓድል ይችላል?", "ሥጋዊ ፍላጎትን", "የማንነት ፍላጎትን", "የነጻነት ፍላጎትን", "የመጠለል ፍላጎትን", 2],
+            ["ዜጎችን እኩል ለማድረግ በሀብት ላይ ገደብ መጣል ምንን ሊያጓድል ይችላል?", "ሥጋዊ ፍላጎትን", "ቀጥተኛ የህልውና ፍላጎትን", "የስም ፍላጎትን", "የነጻነት ፍላጎትን", 3],
+            ["በሀገራችን ታሪክ ህልውናን ለማረጋገጥ ስንጓዝ የትኛውን ፍላጎት ችላ ብለናል?", "ቀጥተኛ የህልውና ጥያቄን", "የውጭ ወረራ መከላከልን", "የጦር መሣሪያ ማዘመንን", "የስምና የነጻነት ጥያቄን", 3],
+            ["ስለሰው ልጅ አቅም 'ሥነ ሕይወታዊ' ዕይታ ምን ያምናል?", "በምርጫው ይለወጣል", "አካባቢውን ሙሉ በሙሉ ይቆጣጠራል", "ነጻ ፈቃድ አለው", "ዕጣ ፈንታው በተፈጥሮ የተወሰነ ነው", 3],
+            ["የሰው ልጆች ከአካባቢያቸው ጋር ባላቸው መስተጋብር ዕጣ ፈንታቸውን ይወስናሉ የሚለው ዕይታ?", "የድርጊትና ምላሽ ዕይታ", "የተፈጥሮ ሕግ ዕይታ", "የመለኮታዊ ጣልቃ ገብነት ዕይታ", "የሥነ ሕይወት ዕይታ", 0],
+            ["በመደመር ፍልስፍና የሰው ልጅ ነጻ ፈቃድ ምን ዓይነት ነው?", "በሥነ ሕይወት የተወሰነ", "ሙሉ በሙሉ የተገደበ", "ከአካባቢ ተጽዕኖ ነጻ የሆነ", "እያደገ የሚሄድና ተፈጥሮን የሚያሸንፍ", 3],
+            ["በመደመር መነጽር የሰው ልጅ ተፈጥሮ እንዴት ይገለጻል?", "ተፈጥሮው የማይለወጥ", "ሙሉ በሙሉ መልካምና ተባባሪ", "ለበጎነትም ለክፋትም ክፍት የሆነ", "ሙሉ በሙሉ ጨካኝና ራስ ወዳድ", 2],
+            ["የሰው ልጅ ከእንስሳት የሚለየው በየትኛው ፍላጎቱ ነው?", "በስምና በነጻነት ፍላጎቱ", "በመብላት ፍላጎቱ", "በመጠለል ፍላጎቱ", "በመራባት ፍላጎቱ", 0],
+            ["መግደርደር በባህላችን የትኞቹን ፍላጎቶች ግጭት ያሳያል?", "የሀብትና የሥልጣን", "የነጻነትና የእኩልነት", "ሥጋዊና የስም ፍላጎት", "ቀጥተኛና ተዘዋዋሪ ህልውና", 2],
+            ["ሥጋዊ ፍላጎት ባለመሟላቱ የሚመጣው አደጋ በየትኛው የህልውና ምድብ ይካተታል?", "በስም ማጥፋት አደጋ", "በተዘዋዋሪ የህልውና አደጋ", "በቀጥተኛ የህልውና አደጋ", "በፖለቲካዊ አደጋ", 1],
+            ["ሊበራሊዝም ለየትኛው የሰው ልጅ ፍላጎት ቅድሚያ ይሰጣል?", "ለባህል ግንባታ", "ለእኩልነት ፍላጎት", "ለማኅበራዊ ደኅንነት", "ለነጻነት ፍላጎት", 3],
+            ["የሊበራሊዝም ዋነኛ ዓላማ ምንድነው?", "የሀብት ክፍፍልን እኩል ማድረግ", "የሰዎችን ፖለቲካዊና ኢኮኖሚያዊ ነጻነት ማረጋገጥ", "የመንግሥትን ሚና ማሳደግ", "መደብ አልባ ኅብረተሰብ መፍጠር", 1],
+            ["በሊበራሊዝም አስተሳሰብ የመንግሥት ሚና ምን መሆን አለበት?", "ገበያውን መምራት", "ሉዓላዊነትንና የሕግ የበላይነትን ማስከበር", "ኢኮኖሚውን ሙሉ በሙሉ መቆጣጠር", "የሀብት ክፍፍልን ማስተካከል", 1],
+            ["ሶሻሊዝም ለየትኛው ፍላጎት ቅድሚያ ይሰጣል?", "ለነጻነት ፍላጎት", "ለግለሰብ መብት", "ለእኩልነት ፍላጎት", "ለነጻ ገበያ", 2],
+            ["ሶሻሊስቶች የካፒታሊዝም ሥርዓትን እንዴት ይገልጹታል?", "የሰው ልጅ ሥልጣኔ ጣሪያ", "የነጻነት መገለጫ", "የእኩልነት መሠረት", "የባሪያ አሳዳሪነት ውላጅ ሥርዓት", 3],
+            ["የሶሻሊዝም የመጨረሻ ግብ ምንድነው?", "የነጻ ገበያ ሥርዓትን ማስፋፋት", "የግለሰብን ነጻነት ማሳደግ", "መደብ አልባ ኅብረተሰብ መፍጠር", "የመንግሥትን ጣልቃ ገብነት መቀነስ", 2],
+            ["ሶሻል ዲሞክራሲ የትኞቹን ጉዳዮች ለማስታረቅ ይሞክራል?", "ነጻነትን እና እኩልነትን", "መንግሥትና ሃይማኖትን", "ግሎባላይዜሽንና ብሔርተኝነትን", "ካፒታሊዝምና ፊውዳሊዝምን", 0],
+            ["የሶሻል ዲሞክራሲ ዋነኛ መሣሪያ ምንድነው?", "የውጭ ኢንቨስትመንትን መከልከል", "የግል ንብረትን ሙሉ በሙሉ ማጥፋት", "ገበያን ሙሉ በሙሉ ነጻ ማድረግ", "መንግሥት በግብር ሀብትን መልሶ ማከፋፈል", 3],
+            ["በሀገራችን የተማሪዎች ንቅናቄ ወቅት ጎልቶ የወጣው ርዕዮተ ዓለም የቱ ነበር?", "ልማታዊ መንግሥት", "ሶሻል ዲሞክራሲ", "ሊበራሊዝም", "ሶሻሊዝም/ማርክሲዝም", 3],
+            ["ኢሕአዴግ ሥልጣን ሲይዝ የተከተለው መስመር ምን ይባላል?", "አብዮታዊ ዲሞክራሲ", "ሶሻል ዲሞክራሲ", "ኮሙኒዝም", "ሊበራል ዲሞክራሲ", 0],
+            ["የአብዮታዊ ዲሞክራሲ ዋነኛ የኅብረተሰብ መሠረት ማነው?", "አርሶ አደሩ", "ምሁሩ", "ላብ አደሩ", "ከበርቴው", 0],
+            ["ከአብዮታዊ ዲሞክራሲ ድክመቶች አንዱ ምንድነው?", "የመንግሥትን ሚና ሙሉ በሙሉ ማጥፋቱ", "ለከተማ ነዋሪ ብቻ ማዳላቱ", "ለገበያ ሙሉ ነጻነት መስጠቱ", "ኢኮኖሚያዊ አላካኪነት መጫኑ", 3],
+            ["ልማታዊ መንግሥት በዋናነት ምንን ያለመ ነው?", "የመድበለ ፓርቲ ሥርዓትን ማጠናከር", "ፈጣን ኢኮኖሚያዊ ዕድገት ማምጣት", "የግል ዘርፉን ማዳከም", "የፖለቲካ ነጻነትን ማስፋፋት", 1],
+            ["በኢትዮጵያ የልማታዊ መንግሥት ትግበራ ወቅት የታየው ክፍተት ምንድነው?", "የግሉ ዘርፍ ተሳትፎ አለማደጉና ፖለቲካዊ ነጻነት ማነሱ", "የውጭ ብድር መከልከሉ", "የመንግሥት ፕሮጀክቶች መቆማቸው", "ትምህርት ቤቶች መዘጋታቸው", 0],
+            ["አብዮታዊ ዲሞክራሲ ስለ ልሂቃን ያለው ዕይታ ችግር ምንድነው?", "የፖለቲካ ልሂቃንን ከራስ ወዳድነት የራቁ አድርጎ ማሰቡ", "ምሁራንን ሙሉ በሙሉ ማግለሉ", "ሁሉንም ልሂቃን ሌቦች ማለቱ", "የውጭ ልሂቃንን መደገፉ", 0],
+            ["ልማታዊ መንግሥት በሩቅ ምሥራቅ እስያ ሀገራት ምን ውጤት አምጥቷል?", "የግብርና መዳከም", "የሕዝብ ቁጥር መቀነስ", "ተአምራዊ ኢኮኖሚያዊ ዕድገት", "የመንግሥት ሙሉ በሙሉ መፍረስ", 2],
+            ["የብቸኝነት ጉድለት የሚፈጠረው መቼ ነው?", "ሁሉም ዜጋ ሀብታም ሲሆን", "ፉክክር ሲጠፋ", "ትብብር ሲበዛ", "ነገሮች ከከባቢያቸው ጋር ግንኙነት ሲያቋርጡ", 3],
+            ["ማኅበራዊ አደረጃጀቶች ለምን ተፈጠሩ?", "ለስልጣን ሽኩቻ", "ለተፈጥሮ ጥበቃ", "ጦርነት ለማካሄድ", "የብቸኝነት ጉድለትን ለመሙላት", 3],
+            ["በማኅበራዊ ሕይወት ውስጥ ፉክክር ምንን ያዳብራል?", "ብቃትን፣ ቅልጥፍናንና ውጤታማነትን", "ስግብግብነትን ብቻ", "ብቸኝነትን", "ትብብርንና ፍቅርን", 0],
+            ["ፉክክር ከልክ በላይ ሲያይል ወደ ምን ያመራል?", "ወደ ክሡትነት", "ወደ ምሉዕነት", "ወደ ትብብር", "ወደ ስግብግብነት", 3],
+            ["በትብብር እና በፉክክር መካከል ሚዛን ሲዛባ ምን ይፈጠራል?", "ብሔራዊ መግባባት", "የነጻነት መስፋፋት", "ፈጣን ዕድገት", "የብቸኝነት ጉድለት", 3],
+            ["ክሡትነት ማለት ምን ማለት ነው?", "ብቸኝነትን መምረጥ", "የተፈጥሮን ሕግ መጣስ", "በዕድገት ውስጥ ህልውናን እያረጋገጡ መምጣት", "ወደ ኋላ መመለስ", 2],
+            ["መደመር በሚለው ቃል ውስጥ 'መሰብሰብ' ምንን ያመለክታል?", "ቁልቁል ድማሮን", "የድሮውን ማጥፋትን", "አዲስ ነገር መፍጠርን", "የጎንዮሽ ድማሮን (ያለንን ማገናኘት)", 3],
+            ["መደመር በሚለው ቃል ውስጥ 'ማከማቸት' ምንን ያመለክታል?", "ቁልቁል ድማሮን (በትናንት ላይ ዛሬን መጨመር)", "የጎንዮሽ ድማሮን", "ከባዶ መጀመርን", "ያለንን መበተንን", 0],
+            ["በመደመር ፍልስፍና 'ወረት' ማለት ምን ማለት ነው?", "ቀጣይ ሥራን ለመሥራት መነሻ የሚሆን ነባራዊ አቅም", "የፖለቲካ ሥልጣን", "የውጭ እርዳታ", "በባንክ የተቀመጠ ገንዘብ", 0],
+            ["የመደመር መሠረታውያን (መሠረታዊ ጉዳዮች) ስንት ናቸው?", "ሁለት (የጋራ ግብ እና ተነሳሽነት)", "አምስት", "አራት", "ሦስት", 0],
+            ["የጋራ ግብ ለምን ይጠቅማል?", "የውጭ ጠላትን ለመፍጠር", "አንድ ዓይነት ቋንቋ ለመናገር", "ሁሉንም ሰው እኩል ለማድረግ", "ልዩነትን ተሻግሮ ለጋራ ጥቅም ለመሰለፍ", 3],
+            ["ተነሳሽነት በመደመር ውስጥ ምንን ያመለክታል?", "ከሌሎች እርዳታ መጠበቅን", "የግንኙነት ለኳሽ መሆንን (የጎረቤትን በር ማንኳኳትን)", "በብቸኝነት መቆየትን", "ሁሉንም ነገር መቃወምን", 1],
+            ["መደመርን በሩቁ አይቶ ማለፍና ራስን እንደ ታዛቢ መቁጠር ምን ይባላል?", "ቤተኛነት", "አልፎ ሂያጅነት", "እንግድነት", "ሞገደኝነት", 1],
+            ["የመደመርን ዕሳቤ ተረድቶ የራስ ማድረግና ለሀገር ባለቤትነት ስሜት ማዳበር ምን ይባላል?", "አልፎ ሂያጅነት", "አድር ባይነት", "ቤተኛነት", "እንግድነት", 2],
+            ["ከመደመር ዕሴቶች መካከል አንዱ የሆነው የቱ ነው?", "የመደብ ትግል", "ሀገራዊ አንድነት", "ብቸኝነት", "መነጠል", 1],
+            ["የዜጎች ክብር ሲባል ምን ማለት ነው?", "ለሀብታሞች ብቻ ቅድሚያ መስጠት", "የተወሰነ ብሔርን ማክበር", "ማንኛውም ሰው ሰው በመሆኑ ብቻ ክብሩ መከበሩ", "ለባለስልጣናት ልዩ ክብር መስጠት", 2],
+            ["ብልጽግና በመደመር ዕሳቤ ምንን ያመለክታል?", "የሀብታሞችን ቁጥር መጨመርን", "የሰዎችን ሥጋዊ፣ ስምና ነጻነት ፍላጎቶች ማሟላትን", "የጦር መሣሪያ ማብዛትን", "የመንግሥትን በጀት ማሳደግን", 1],
+            ["የመደመር ፍልስፍና መነሻ ሀሳቦች ከየት የተቀዱ ናቸው?", "ከሶሻሊዝም ርዕዮተ ዓለም ብቻ", "ከሀገራዊ ተጨባጭ ሁኔታዎችና ዕሴቶች", "ከምዕራባውያን መጻሕፍት ብቻ", "ከጥንታዊ ግሪክ ፍልስፍና", 1],
+            ["በሀገራችን ጎልቶ የሚታየው ዋነኛ የአስተሳሰብ ችግር (ሳንካ) ምንድነው?", "ዋልታ ረገጥነት", "ተነሳሽነት", "ክሡትነት", "ወረት ማካበት", 0],
+            ["ዋልታ ረገጥነት ማለት ምን ማለት ነው?", "ነገሮችን በልኬት ማየት", "ሁለት ተቃራኒ ጫፎች ላይ ቆሞ ማነብነብ", "ሁሉንም ሐሳብ መቀበል", "መካከለኛ መንገድ መፈለግ", 1],
+            ["የዋልታ ረገጥነት መፍትሔው ምንድነው?", "ሁሉንም ሐሳብ መቃወም", "ጎራ የለሽ የልኬት ዕይታን ማዳበር", "ከውጭ ሐሳብ ማምጣት", "አንዱን ጫፍ ብቻ መምረጥ", 1],
+            ["በክርክርና በውይይት መካከል ያለውን ሚዛን በተመለከተ መደመር ምን ይመክራል?", "ዝምታን መምረጥን", "ውይይት ላይ ትኩረት ሰጥቶ መሥራትን", "ሁሌም መከራከርን", "ክርክርን ሙሉ በሙሉ ማጥፋትን", 1],
+            ["ጊዜ ታካኪነት ማለት ምን ማለት ነው?", "ሁሉንም ጊዜ በእኩል ማየት", "ጊዜን በአግባቡ መጠቀም", "በትናንት፣ ዛሬ፣ ወይም ነገ ላይ ብቻ ማተኮር", "ያለፈውን ታሪክ መርሳት", 2],
+            ["ሁሉን ነገር ከትናንት ለመቅዳት መሞከርና ዛሬን ወደ ትናንት መጎተት ምን ዓይነት አስተሳሰብ ነው?", "የነገ ታካኪነት", "የዛሬ ታካኪነት", "ዕለታዊነት", "የትናንት ታካኪነት", 3],
+            ["ችግሮችንም ሆነ ስኬቶችን የዛሬ ውጤት ብቻ አድርጎ የማሰብ አባዜ ምን ይባላል?", "ሞገደኝነት", "ዕለታዊነት (የዛሬ ታካኪነት)", "ሐሳባዊነት", "ቀቢፀ ተስፋ", 1],
+            ["ሕይወትን በተስፋ መነጽር ብቻ መመልከት ምን ይባላል?", "እውነታውነት", "ልኬታዊነት", "ባዶ ሕልመኝነት", "ቀቢፀ ተስፈኝነት", 2],
+            ["አቅላይነት ማለት ምን ማለት ነው?", "ነገሮችን በጥልቀት መመርመር", "ሁሉንም ነገር ማወሳሰብ", "ነገሮችን በተነጣጠለና ቁንጽል መንገድ መረዳት", "የሥርዓትን ዙሪያ ጥምጥም ማየት", 2],
+            ["የሁሉን ችግር መነሻ ከአንድ ጉዳይ (ለምሳሌ ፖለቲካ ብቻ) ጋር ማያያዝ ምን ይባላል?", "ቤተኛነት", "አላካኪነት", "ልኬታዊነት", "ነቢር ነበብ", 1],
+            ["ሐሳባዊነት ምንድነው?", "ተለዋዋጭ መሆን", "በተግባር ላይ ማተኮር", "ተጨባጭ ሁኔታን ማየት", "ለፈጠርነው የሐሳብ መስመር ማሸርገድ", 3],
+            ["ነቢር ነበብ ዕይታ ማለት ምን ማለት ነው?", "በንድፈ ሐሳብ ብቻ መመራት", "ከነባራዊ ሁኔታ ተነሥቶ ጉዞን መንደፍ", "ያለፈውን ታሪክ መኮረጅ", "የውጭ ፖሊሲን መቅዳት", 1],
+            ["ሙያን መናቅ በሀገራችን ምን አስከትሏል?", "ማኅበራዊ እኩልነትን አምጥቷል", "የግብርና ምርትን ጨምሯል", "የኢንዱስትሪና ቴክኖሎጂ ሽግግርን ገድሏል", "የውጭ ምንዛሬን አሳድጓል", 2],
+            ["ሞገደኝነት ማለት ምን ማለት ነው?", "ሁሉንም ነገር አምኖ መቀበል", "አዲስ ነገርን ላለመቀበል ሰበብ መደርደርና እምቢታ", "ከሌሎች ጋር መተባበር", "ሥራን በትጋት መሥራት", 1],
+            ["ትላልቅ የለውጥ ሐሳቦችን ለቀልድና ለቧልት ማዋል ምን ይባላል?", "አቅላይነት", "ሞገደኝነት", "ፌዘኝነት", "አድር ባይነት", 2],
+            ["አድር ባይነት ማለት ምን ማለት ነው?", "ለግል ጥቅም ሲባል የሌላውን ሕልም ሳያላምጡ መዋጥ", "ለሕዝብ ጥቅም መቆም", "ተቋማዊ አሠራርን ማክበር", "ሐሳብን በነጻነት መግለጽ", 0],
+            ["የአድር ባይነት ትልቁ አደጋ ምንድነው?", "የፖለቲካ መረጋጋት ያመጣል", "ለልማት ያነሳሳል", "በመሪና ተመሪ መካከል ያለን ጤናማ ግንኙነት ያበላሻል", "የሀገር ፍቅርን ይጨምራል", 2],
+            ["አዲስ ሐሳብ ይዘው የሚመጡ መሪዎች ምን ዓይነት ተግዳሮት ይገጥማቸዋል?", "ከሞገደኞች ጋር ይጋጫሉ", "ወዲያውኑ ስኬታማ ይሆናሉ", "ምንም ተግዳሮት አይገጥማቸውም", "ሁልጊዜም በደስታ ይቀበሏቸዋል", 0],
+            ["ቀልድ በማኅበረሰብ ውስጥ ምን አሉታዊ ሚና ሊኖረው ይችላል?", "የፖለቲካ ተሳትፎን ያሳድጋል", "ዲሞክራሲን ያጠናክራል", "ሰዎችን ወደ ውጊያ ይገፋፋል", "ጭቆናን በሥርዓት ታግለው እንዳያሸንፉ ያደርጋል", 3],
+            ["የመደመር ልኬታዊ (ጎራ የለሽ) ዕይታ ጠቀሜታ ምንድነው?", "ከውጭ ሐሳብን ለመቅዳት", "ሰዎችን ለመፈረጅ", "ነገሮችን ወደ እውነታው አቅርቦ ለመረዳት", "የጠላትና ወዳጅ ጎራ ለመፍጠር", 2],
+            ["የመደመር 'ቀይ መሥመሮች' (የግብር ሳንካዎች) የተባሉት የትኞቹ ናቸው?", "ኅሊና ቢስነትና ልግመኝነት", "ሞገደኝነትና ፌዘኝነት", "ሊበራሊዝምና ሶሻሊዝም", "አቅላይነትና ጊዜ ታካኪነት", 0],
+            ["ኅሊና ቢስነት በሀገራችን ምንን አባብሷል?", "የውጭ ኢንቨስትመንትን", "የተደራጀ ሌብነትና ዘረፋን", "የዲሞክራሲ ባህልን", "የኢኮኖሚ ዕድገትን", 1],
+            ["በመደመር ዕሳቤ 'የከረባት ለባሽ ወንጀል' (የባለስልጣናት ሌብነት) ከድሃው ስርቆት አንጻር ሲታይ?", "ተፈጥሯዊ ነው", "ቀላልና የሚታለፍ ነው", "ምንም ጉዳት የለውም", "በእጅጉ የከፋና ሀገርን የሚያወድም ነው", 3],
+            ["ልግመኝነት ማለት ምን ማለት ነው?", "በትጋት መሥራት", "አዲስ ነገር መፍጠር", "ዐውቆ መተኛትና ሐኬተኛ መሆን", "ለሌሎች ማካፈል", 2],
+            ["ስርቆት በሀገራችን ባህል ብዙውን ጊዜ ከማን ጋር ተያይዞ ይታሰባል?", "ከባለሥልጣናት ጋር", "ከምሁራን ጋር", "ከድሃው ማኅበረሰብ ክፍል ጋር", "ከሀብታሞች ጋር", 2],
+            ["የተደራጀ ሌብነት መንሰራፋት የትኛውን ፍላጎት ይገዳደራል?", "የሃይማኖት ነጻነትን", "የመናገር ነጻነትን", "የመሰብሰብ መብትን", "የማኅበራዊ ፍትሕ ጥያቄን", 3],
+            ["ኅሊና ቢስነት በሰዎች መካከል ምንን ያጠፋል?", "ጥላቻን", "ፉክክርን", "ስግብግብነትን", "መተማመንን", 3],
+            ["ልግመኝነት በመደመር ላይ ምን ተጽዕኖ አለው?", "የጋራ ግብን ያሳካል", "የጋራ አቅም እንዳይደመር ያደርጋል", "የሀብት ክምችት ያመጣል", "ፈጠራን ያበረታታል", 1],
+            ["የተበላሸ የሥራ ሞራልና ውጤታማነት የሌለው የሥራ ባህል ምን ያመጣል?", "ሀገርን ወደ አዘቅት ይገፋል", "ብሔራዊ መግባባት ይፈጥራል", "የፖለቲካ መረጋጋት ያመጣል", "ፈጣን ዕድገት ያመጣል", 0],
+            ["መደመር ለሕዝብ አገልጋዮች (ሹመኞች) ምንን መሥፈርት ያደርጋል?", "የብሔር ተዋጽኦን ብቻ", "ችሎታ፣ ብቃትና ትጋትን", "የፖለቲካ ታማኝነትን ብቻ", "የትውውቅ አውታርን", 1],
+            ["የኢትዮጵያ ሀገረ መንግሥት ተደጋጋሚ የህልውና አደጋ የሚገጥመው ለምንድነው?", "ሕዝቡ ስለማይሠራ", "የውጭ ጠላት ስለበዛ", "የተፈጥሮ ሀብት ስለሌለ", "ቅቡልነቱ በፈተና የተሞላ በመሆኑ", 3],
+            ["ገዢዎች የሕዝብን ፍላጎት ከማሟላት ይልቅ በምን ላይ ጊዜያቸውን ያጠፋሉ?", "ትምህርት ቤቶችን በመገንባት", "የውጭ ግንኙነት በማጠናከር", "ቴክኖሎጂ በመፍጠር", "አጣዳፊ የህልውና አደጋን በመመከት ላይ", 3],
+            ["ነውጥና የእርስ በርስ ጦርነት በመደመር መነጽር ሲታይ ምንድነው?", "የዕድገት መገለጫ", "የባህል ልውውጥ", "የዲሞክራሲ መለማመጃ", "የአንድ ሀገር ራስን የማጥፋት ሙከራ", 3],
+            ["ጭቆና የሰዎችን ፍላጎት ምን ያደርጋል?", "ነጻ ያወጣል", "ያከብራል", "ከራሳቸው ነጥቆ ለሌሎች መሻት እንዲውል ያደርጋል", "ያሳድጋል", 2],
+            ["በኢትዮጵያ የፖለቲካ ታሪክ ውስጥ ልሂቃኑ ምን ዓይነት ባህል አዳብረዋል?", "የመጠራጠርና የመፈራረጅ ባህል", "የመደማመጥ ባህል", "የመተባበር ባህል", "የመቻቻል ባህል", 0],
+            ["በመደመር ፍልስፍና የዲሞክራሲ ግንባታ ለኢትዮጵያ ምኗ ነው?", "የህልውና ጉዳይ", "የውጭ ጫና", "የቅንጦት ጉዳይ", "የምርጫ ጉዳይ", 0],
+            ["በመደመር መሠረት ጠንካራ ተቋማት ለምን ያስፈልጋሉ?", "የውጭ ሀገራትን ለማስደሰት", "የሕግ የበላይነትንና የሕዝብን መብት ለማረጋገጥ", "ሀብት ለማከማቸት", "የገዢዎችን ሥልጣን ለማራዘም", 1],
+            ["ከገዢነት ወደ መሪነት መሸጋገር ሲባል ምን ማለት ነው?", "በጉልበት ፈንታ በማሳመንና በራዕይ መምራት", "ህግን መጣስ", "የሕዝብን ድምፅ ማፈን", "ሥልጣንን በኃይል መጨበጥ", 0],
+            ["ብሔራዊ መግባባት ለመፍጠር ዋነኛው መንገድ ምንድነው?", "አንድ ቋንቋ ብቻ መጠቀም", "ዕርቀ ሰላም መፍጠር", "ተቃዋሚዎችን ማጥፋት", "የውጭ ኃይሎችን ጣልቃ ማስገባት", 1],
+            ["በኢትዮጵያ ኢኮኖሚ ውስጥ የመንግሥት ጣልቃ ገብነት ዓላማ ምን መሆን አለበት?", "የግል ዘርፉን ማጥፋት", "የገበያ ጉድለትን ማስተካከልና ፍትሐዊነትን ማረጋገጥ", "ሁሉንም ሀብት መቆጣጠር", "ለባለስልጣናት ሀብት ማከማቸት", 1],
+            ["በኢትዮጵያ የዲሞክራሲ ግንባታ አማራጮች ውስጥ ዋነኛው ፈተና ምንድነው?", "የኢኮኖሚ ድቀት", "ብሔርተኝነትና የሀገረ መንግሥት ምሥረታ ታሪክ", "የተፈጥሮ አደጋ", "የውጭ ጣልቃ ገብነት", 1],
+            ["ተቋማዊ ችኮነት ማለት ምን ማለት ነው?", "ተቋማት ለሕዝብ ክፍት መሆን", "ተቋማት በቴክኖሎጂ መዘመን", "ተቋማት ከአንድ የፖለቲካ ኃይል ጋር መጣበቅ", "ተቋማት በጀት ማጣት", 2],
+            ["የቤተ ዘመድና የጥቅም ሸሪኮች መረብ בתቋማት ውስጥ ምን ያስከትላል?", "የተቋማትን ድቀት", "የተቋማትን ብቃት", "የአገልግሎት ጥራትን", "የሠራተኞችን ደስታ", 0],
+            ["የመሪነት ፈተና በሀገራችን በምን ይገለጻል?", "በዲሞክራሲያዊ መንገድ መምራት", "የሕዝብን ሐሳብ ማዳመጥ", "ራዕይ መኖር", "በገዢነት አስተሳሰብ መመራት", 3],
+            ["የጋራ ባህልና ዕሴቶቻችን ለምን ይጠቅማሉ?", "የውጭ ባህልን ለማስገባት", "የፖለቲካ ባህል ግንባታን ዘላቂ ለማድረግ", "ግጭትን ለመፍጠር", "ብሔራዊ መከፋፈልን ለማስፋት", 1],
+            ["ቁስ ተሻጋሪ ዕሴቶች ለዲሞክራሲ ባህል ግንባታ ያላቸው ድርሻ?", "ምንም ድርሻ የላቸውም", "አሉታዊ ነው", "እጅግ ከፍተኛ ነው", "ለኢኮኖሚ ብቻ ይጠቅማሉ", 2],
+            ["የኢኮኖሚ ሥርዓታችን ስብራት መንስኤዎች የትኞቹ ናቸው?", "የገበያ፣ የመንግሥትና የሥርዓት ጉድለት", "የሕዝብ ቁጥር መጨመር ብቻ", "የተፈጥሮ ድርቅ ብቻ", "የውጭ ዕዳ ብቻ", 0],
+            ["የገበያ ጉድለትን ለማስተካከል የማን ጣልቃ ገብነት ያስፈልጋል?", "የተቃዋሚ ፓርቲዎች", "የሃይማኖት ተቋማት", "የውጭ ኢንቨስተሮች", "የመንግሥት ጣልቃ ገብነት", 3],
+            ["መንግሥት በገበያ ውስጥ ጣልቃ ሲገባ የሚፈጠረው አደጋ ምንድነው?", "የሸቀጦች መብዛት", "የመንግሥት ጉድለት (ሙስናና ብክነት)", "የገበያ መጥፋት", "የዋጋ መቀነስ", 1],
+            ["የምርት ኃይሎች እንደ ሀገራዊ እምቅ አቅም ሲታዩ ምንን ያካትታሉ?", "የፖለቲካ ፓርቲዎችን", "የውጭ ብድርን", "የሕዝብ ቁጥርና የተፈጥሮ ሀብትን", "የጦር መሣሪያዎችን", 2],
+            ["የኢኮኖሚ መዋቅራዊ ሽግግር ማለት ምንድነው?", "ከግብርና ወደ ኢንዱስትሪና ዕውቀት መር ኢኮኖሚ መሸጋገር", "ወደ ውጭ ሀገር መሰደድ", "ባህላዊ እርሻን ማስፋፋት", "ሁሉንም ሀብት ለመንግሥት መስጠት", 0],
+            ["ግብርና 'አዳጊ ሟች' ነው ሲባል ምን ማለት ነው?", "ፈጽሞ የማያድግ ዘርፍ መሆኑ", "አድጎ ወደ ኢንዱስትሪ መሸጋገር ያለበት ዘርፍ መሆኑ", "ሁልጊዜም የሀገር ዋልታ መሆኑ", "መተው ያለበት ዘርፍ መሆኑ", 1],
+            ["የቴክኖሎጂ ልማት በሀገራችን ምን ዓይነት ሁኔታ ውስጥ ነው?", "የአርፍዶ ደራሽነት ምንዳ", "የቀዳሚነት ደረጃ", "ሙሉ በሙሉ የተሟላ", "የማያስፈልግ", 0],
+            ["ዓለም አቀፍ አዝማሚያዎችን መረዳት ለምን ይጠቅማል?", "ለሀገራዊ ፖሊሲና የውጭ ግንኙነት አንድምታ", "የውጭ ሀገራትን ለመውረር", "ባህላችንን ለመተው", "ዓለምን ለመቆጣጠር", 0],
+            ["የመደመር የውጭ ግንኙነት ፍልስፍና በምን ላይ የተመሠረተ ነው?", "በመነጠልና ራስን በማግለል ላይ", "በጦርነትና ፉክክር ላይ", "በሌሎች ሀገራት ጣልቃ በመግባት ላይ", "በጋራ ተጠቃሚነትና ሉዓላዊነትን በማክበር ላይ", 3],
+            ["በዓለም አቀፍ ደረጃ እየገነኑ የመጡት አዝማሚያዎች የትኞቹ ናቸው?", "የሶሻሊዝም መስፋፋት", "የአምባገነንነት መጥፋት", "የኮሙኒዝም መመለስ", "የሕዝበኝነትና ብሔርተኝነት መግነን", 3],
+            ["የኃያላን ሀገራት ፉክክር ለታዳጊ ሀገራት ምን ይፈጥራል?", "ምንም ተጽዕኖ የለውም", "ሰላም ብቻ", "የኢኮኖሚ ዕድገት ብቻ", "ተግዳሮትና ዕድል", 3],
+            ["በሀገራችን የታየው የፖለቲካ ሥርዓት ለውጥ ዋነኛ አላማ ምንድነው?", "ዲሞክራሲን በተቋማዊ መሠረት ላይ ማኖር", "አዲስ አምባገነን መፍጠር", "ሀገርን መከፋፈል", "የድሮ ሥርዓትን መመለስ", 0],
+            ["የሀገረ መንግሥት ቅቡልነት ማጣት ምን ያስከትላል?", "ለብሔራዊ አንድነት", "ለቴክኖሎጂ ሽግግር", "ለህልውና አደጋና ለርስ በርስ ግጭት", "ለፈጣን ዕድገት", 2],
+            ["በኢትዮጵያ ታሪክ ነገሥታት ዋና ጊዜያቸውን በምን ላይ ያጠፉ ነበር?", "ትምህርት በማስፋፋት", "ሀገርን ከውስጥና ከውጭ ጠላት በማረጋጋት", "ዲሞክራሲን በመገንባት", "ኢንዱስትሪ በመትከል", 1],
+            ["የኢትዮጵያ ልሂቃን መዋቅራዊ ችግር ተብሎ የተጠቀሰው ምንድነው?", "ነባራዊ ሁኔታን ሳያገናዝቡ የውጭን ሐሳብ መተግበር", "ከልክ በላይ መቻቻል", "ለሀገር ፍቅር ማጣት", "በጣም ብዙ ማንበብ", 0],
+            ["በመደመር ፍልስፍና የጋራ ማንነት እንዴት ይገነባል?", "በጋራ ግብ ዙሪያ በመረባረብ", "በአንድ ቋንቋ ብቻ በመናገር", "በጦርነት አማካኝነት", "ታሪክን በመርሳት", 0],
+            ["የሀገራችን የፖለቲካ ኃይሎች ዋነኛ ድክመት ምንድነው?", "ስክነትና መደማመጥ የጠፋበት መንገድ መከተል", "ለኢኮኖሚ ብቻ ቅድሚያ መስጠት", "በጣም ብዙ ውይይት ማድረግ", "ለባህል ትኩረት ማጣት", 0],
+            ["የሶሻል ዲሞክራሲን ርዕዮተ ዓለም በተግባር ላይ ያዋሉት የትኞቹ ሀገራት ናቸው?", "የላቲን አሜሪካ ሀገራት", "የበለጸጉት የምዕራብ ሀገራት", "የአፍሪካ ሀገራት", "የሩቅ ምሥራቅ እስያ ሀገራት", 1],
+            ["የነጻ ገበያ ሥርዓት (ካፒታሊዝም) ዋነኛ ችግር ተብሎ የሚነሳው ምንድነው?", "ፍትሐዊ የሀብት ክፍፍል አለማምጣቱ", "የግለሰብን ነጻነት ማፈኑ", "ምርታማነትን መቀነሱ", "ቴክኖሎጂን መቃወሙ", 0],
+            ["አብዮታዊ ዲሞክራሲን እንደ ቋሚ ርዕዮተ ዓለም መውሰድ ለምን ተተቸ?", "መሸጋገሪያ እንጂ ቋሚ መሆን ስለሌለበት", "የምዕራባውያን ጫና ስለሆነ", "ካፒታሊዝምን ስለሚያጠፋ", "ሃይማኖትን ስለሚቃወም", 0],
+            ["በአብዮታዊ ዲሞክራሲ ሥርዓት የመንግሥትና የፓርቲ መዋሃድ ምን አመጣ?", "የግል ዘርፉን አሳደገ", "ዲሞክራሲን አስፋፋ", "የፖለቲካ ምኅዳሩን አጠበበ", "የኢኮኖሚ እኩልነትን አረጋገጠ", 2],
+            ["መደመር ከችግር ትንተና አንጻር ምን ዓይነት ነው?", "ሙሉ በሙሉ ምዕራባዊ ነው", "ሙሉ በሙሉ ምሥራቃዊ ነው", "ሀገር በቀል ነው", "ከውጭ የተቀዳ ነው", 2],
+            ["መደመር ከመፍትሔ ፍለጋ አንጻር ምን ዓይነት ነው?", "ከቻይና ብቻ የተቀዳ ነው", "ከአሜሪካ ብቻ የተቀዳ ነው", "ከሀገር ውስጥ ብቻ የተወሰደ ነው", "ከሀገር ውስጥም ከውጭም ዕውቀት የተቀመረ ነው", 3],
+            ["የመደመር ፍልስፍና ማዕከላዊ ትኩረት ምንድነው?", "የፖለቲካ ተቃዋሚዎችን ማጥፋት", "አንድ የኢኮኖሚ ሥርዓት መጫን", "የውጭ ባህልን ማስፋፋት", "የተበታተነውን አቅም ሰብስቦ ወረት ማካበትና ክሡትነትን ማረጋገጥ", 3],
+            ["የመደመር ፍልስፍና የሀገራችንን ችግሮች ለመፍታት ምን ዓይነት መፍትሔ ይጠቁማል?", "ሀገር በቀል መፍትሔ", "ከምሥራቅ እስያ የተቀዳ መፍትሔ", "ወታደራዊ መፍትሔ", "ሙሉ በሙሉ ምዕራባዊ መፍትሔ", 0],
+            ["የአንድን ሰው ባሕርይ አካባቢው ብቻ ይወስነዋል የሚለው አመለካከት የማን ነው?", "የነጻ ፈቃድ ዕይታ", "የሥነ-መለኮት ዕይታ", "የአካባቢ ባሪያነት (የድርጊትና ምላሽ) ዕይታ", "የመደመር ዕይታ", 2],
+            ["የሰው ልጅ ከእንስሳት ቀድሞ የሠለጠነው በጭካኔው ነው የሚለው ሐሳብ መቼ ገነነ?", "በኢንዱስትሪ አብዮት ወቅት", "በፈረንሳይ አብዮት ወቅት", "ከአንደኛው የዓለም ጦርነት በኋላ", "ከቀዝቃዛው ጦርነት በኋላ", 2],
+            ["ሶሻሊዝም የሰውን ልጅ ተፈጥሮ እንዴት ይመለከተዋል?", "በመሠረቱ ተባባሪና ለሌላው አሳቢ", "ተፎካካሪና ጠበኛ", "ስግብግብና ራስ ወዳድ", "ሙሉ በሙሉ ነጻ", 0],
+            ["ሊበራሊዝም የሰውን ልጅ ተፈጥሮ እንዴት ይመለከተዋል?", "ማኅበራዊ ፍጡር ብቻ", "ለሌላው ቅድሚያ የሚሰጥ", "ራስ ወዳድና የማያቋርጥ የፍጆታ ጥም ያለው", "ከስግብግብነት የጸዳ", 2],
+            ["በሊበራሊዝምና በሶሻሊዝም መካከል ያለው መሠረታዊ ተቃርኖ ከምን ይመነጫል?", "በቴክኖሎጂ አጠቃቀም", "በነጻነትና በእኩልነት ፍላጎቶች ተቃርኖ", "በሃይማኖት ልዩነት", "በባህል ልዩነት", 1],
+            ["ካፒታሊዝም የፊውዳሊዝምን ጭቆና መልክ ቀይሮታል ያሉት እነማን ናቸው?", "የጥንት ግሪክ ፈላስፎች", "የመደመር ፈላስፎች", "የ19ኛው ክፍለ ዘመን የሶሻሊዝም ፈላስፎች", "የሊበራሊዝም አቀንቃኞች", 2],
+            ["ሶሻሊስቶች የላብ አደሩን አምባገነንነት መንግሥት ለምን ፈለጉ?", "የሃይማኖት ነጻነትን ለማስፋፋት", "የከበርቴውን የበላይነት አጥፍቶ እኩልነት ለማምጣት", "የገበያ ውድድርን ለማበረታታት", "የውጭ ኢንቨስትመንትን ለመሳብ", 1],
+            ["የሶሻል ዲሞክራሲ ዋነኛ ትችት ከማርክሲስቶች በኩል ምንድነው?", "ኢኮኖሚውን ያዳክማል", "ካፒታሊዝምን በማቆየት ሠራተኛውን ይበዘብዛል", "በጣም ብዙ ግብር ይሰበስባል", "የግል ባለሀብቱን ያጠፋል", 1]
+        ];
+
+        // Format to a more usable object structure
+        const questions = rawData.map(q => {
+            return {
+                text: q[0],
+                options: [q[1], q[2], q[3], q[4]],
+                answer: q[5]
+            };
+        });
+
+        // App State
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userName = "";
+        let userId = "";
+        let userAnswers = new Array(questions.length).fill(null); // Keeps track of selected indices
+
+        // DOM Elements
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        
+        const studentNameInput = document.getElementById('student-name');
+        const studentIdInput = document.getElementById('student-id');
+        
+        const currentQNumEl = document.getElementById('current-q-num');
+        const totalQNumEl = document.getElementById('total-q-num');
+        const currentScoreEl = document.getElementById('current-score');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        
+        const feedbackContainer = document.getElementById('feedback-container');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackAmharic = document.getElementById('feedback-amharic');
+        const feedbackEnglish = document.getElementById('feedback-english');
+        
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+        const btnSubmit = document.getElementById('btn-submit');
+        const toastEl = document.getElementById('toast');
+        const toastMsgEl = document.getElementById('toast-message');
+
+        // Initialization
+        totalQNumEl.textContent = questions.length;
+
+        function showToast(message) {
+            toastMsgEl.textContent = message;
+            toastEl.classList.remove('hidden');
+            setTimeout(() => {
+                toastEl.classList.add('hidden');
+            }, 3000);
+        }
+
+        function startQuiz() {
+            userName = studentNameInput.value.trim();
+            userId = studentIdInput.value.trim();
+
+            if (!userName || !userId) {
+                showToast("Please enter both your Full Name and ID Number to start.");
+                return;
+            }
+
+            welcomeScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            loadQuestion(0);
+        }
+
+        function loadQuestion(index) {
+            currentQuestionIndex = index;
+            const q = questions[index];
+            
+            // Update UI
+            currentQNumEl.textContent = index + 1;
+            currentScoreEl.textContent = score;
+            questionTextEl.textContent = `${index + 1}. ${q.text}`;
+            
+            // Render Options
+            optionsContainer.innerHTML = '';
+            feedbackContainer.classList.add('hidden');
+
+            const hasAnswered = userAnswers[index] !== null;
+            const selectedIdx = userAnswers[index];
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `option-btn w-full text-left px-5 py-4 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 font-medium`;
+                
+                // Add letter prefix (ሀ, ለ, ሐ, መ)
+                const labels = ["ሀ", "ለ", "ሐ", "መ"];
+                btn.innerHTML = `<span class="inline-block w-6 font-bold text-indigo-500">${labels[idx]}.</span> ${opt}`;
+                
+                if (hasAnswered) {
+                    btn.disabled = true;
+                    btn.classList.add('disabled-option');
+                    
+                    if (idx === q.answer) {
+                        btn.classList.add('correct-answer');
+                        btn.classList.remove('disabled-option');
+                    } else if (idx === selectedIdx) {
+                        btn.classList.add('wrong-answer');
+                        btn.classList.remove('disabled-option');
+                    }
+                } else {
+                    btn.onclick = () => selectOption(idx);
+                }
+
+                optionsContainer.appendChild(btn);
+            });
+
+            // Show feedback if already answered
+            if (hasAnswered) {
+                showFeedback(selectedIdx === q.answer, q.options[q.answer]);
+            }
+
+            // Update Control Buttons
+            btnPrev.disabled = index === 0;
+            
+            if (index === questions.length - 1) {
+                btnNext.classList.add('hidden');
+                btnSubmit.classList.remove('hidden');
+                // Only allow submit if the last question is answered
+                btnSubmit.disabled = !hasAnswered; 
+                btnSubmit.className = hasAnswered 
+                    ? "px-5 py-2.5 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-colors" 
+                    : "px-5 py-2.5 rounded-lg bg-gray-400 text-white font-medium cursor-not-allowed";
+            } else {
+                btnNext.classList.remove('hidden');
+                btnSubmit.classList.add('hidden');
+                // Change Next to Skip if not answered
+                btnNext.innerHTML = hasAnswered ? 'Next &rarr;' : 'Skip &rarr;';
+                btnNext.className = hasAnswered 
+                    ? "px-5 py-2.5 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors"
+                    : "px-5 py-2.5 rounded-lg bg-gray-400 text-white font-medium hover:bg-gray-500 transition-colors";
+            }
+        }
+
+        function selectOption(selectedIndex) {
+            const q = questions[currentQuestionIndex];
+            const isCorrect = selectedIndex === q.answer;
+            
+            userAnswers[currentQuestionIndex] = selectedIndex;
+            
+            if (isCorrect) score++;
+            
+            // Re-render to show correct/wrong state without completely reloading
+            loadQuestion(currentQuestionIndex);
+        }
+
+        function showFeedback(isCorrect, correctText) {
+            feedbackContainer.classList.remove('hidden');
+            if (isCorrect) {
+                feedbackContainer.className = "mt-6 p-4 rounded-lg fade-in bg-green-50 border border-green-200";
+                feedbackTitle.className = "font-bold text-lg mb-2 text-green-700";
+                feedbackTitle.textContent = "✓ Correct! / ትክክል!";
+                
+                feedbackAmharic.textContent = `መልሱ "${correctText}" ነው። በ'መደመር' ፍልስፍና መሠረት ይህ ጽንሰ ሀሳብ ለማህበራዊና ሀገራዊ ግንባታ ቁልፍ ሚና ይጫወታል።`;
+                feedbackEnglish.textContent = `The answer is "${correctText}". According to the Medemer philosophy, this concept plays a key role in social and national building.`;
+            } else {
+                feedbackContainer.className = "mt-6 p-4 rounded-lg fade-in bg-red-50 border border-red-200";
+                feedbackTitle.className = "font-bold text-lg mb-2 text-red-700";
+                feedbackTitle.textContent = "✗ Incorrect / ስህተት";
+                
+                feedbackAmharic.textContent = `ትክክለኛው መልስ "${correctText}" ነው። የመደመር ዕይታ በዚህ ጉዳይ ላይ የሚያተኩረው የችግሩን ሥረ-መሰረት ለመፍታት እና ሚዛናዊ አቋም ለመያዝ ነው።`;
+                feedbackEnglish.textContent = `The correct answer is "${correctText}". The Medemer perspective focuses on resolving the root cause of this issue and maintaining a balanced approach.`;
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < questions.length - 1) {
+                loadQuestion(currentQuestionIndex + 1);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                loadQuestion(currentQuestionIndex - 1);
+            }
+        }
+
+        function submitQuiz() {
+            // Check if there are unanswered questions
+            const unansweredCount = userAnswers.filter(a => a === null).length;
+            if (unansweredCount > 0) {
+                const proceed = confirm(`You have ${unansweredCount} unanswered questions. Are you sure you want to submit?`);
+                if (!proceed) return;
+            }
+
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+
+            document.getElementById('summary-name').textContent = userName;
+            document.getElementById('summary-id').textContent = userId;
+            document.getElementById('final-score-val').textContent = `${score}/${questions.length}`;
+            
+            const percentage = (score / questions.length) * 100;
+            document.getElementById('score-bar').style.width = `${percentage}%`;
+            document.getElementById('final-percentage').textContent = `${percentage.toFixed(1)}%`;
+        }
+
+        function sendScoresToTeacher() {
+            const percentage = ((score / questions.length) * 100).toFixed(1);
+            const subject = encodeURIComponent(`Medemer Quiz Results: ${userName} - ${userId}`);
+            
+            let bodyText = `Hello,\n\nHere are the final quiz results submitted from the Medemer Philosophy Quiz Application:\n\n`;
+            bodyText += `Student Details:\n`;
+            bodyText += `Name: ${userName}\n`;
+            bodyText += `ID: ${userId}\n\n`;
+            bodyText += `Score Summary:\n`;
+            bodyText += `Correct Answers: ${score} out of ${questions.length}\n`;
+            bodyText += `Percentage Score: ${percentage}%\n\n`;
+            bodyText += `Unanswered Questions: ${userAnswers.filter(a => a === null).length}\n\n`;
+            bodyText += `Thank you.`;
+
+            const body = encodeURIComponent(bodyText);
+            
+            window.location.href = `mailto:mesayferedegn2@gmail.com?subject=${subject}&body=${body}`;
+        }
+    </script>
+</body>
+</html>
